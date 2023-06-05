@@ -15,8 +15,8 @@
 #include "dma.h"
 #include "irq.h"
 
-#define TYPE_PCIEMU_DEVICE "pciemu"
-#define PCIEMU_DEVICE_DESC "PCIEMU Device"
+#define TYPE_PCIEMU_DEVICE "rvgpu-pci"
+#define PCIEMU_DEVICE_DESC "RVGPU PCIe Device"
 /*
  * Declare the object type for PCIEMUDevice and all boilerplate code
  * See https://qemu.readthedocs.io/en/latest/devel/qom.html for details

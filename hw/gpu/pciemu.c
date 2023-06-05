@@ -117,9 +117,9 @@ static void pciemu_class_init(ObjectClass *klass, void *class_data)
     pci_device_class->vendor_id = PCIEMU_HW_VENDOR_ID;
     pci_device_class->device_id = PCIEMU_HW_DEVICE_ID;
     pci_device_class->revision = PCIEMU_HW_REVISION;
-    pci_device_class->class_id = PCI_CLASS_OTHERS;
+    pci_device_class->class_id = PCI_CLASS_DISPLAY_VGA;
 
-    set_bit(DEVICE_CATEGORY_MISC, device_class->categories);
+    set_bit(DEVICE_CATEGORY_DISPLAY, device_class->categories);
     device_class->desc = PCIEMU_DEVICE_DESC;
     device_class->reset = pciemu_device_reset;
 }
