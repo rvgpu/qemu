@@ -61,6 +61,3 @@
 [submodule "subprojects/libvfio-user"]
 	path = subprojects/libvfio-user
 	url = https://gitlab.com/qemu-project/libvfio-user.git
-[submodule "hw/gpu/rvgpu"]
-	path = hw/gpu/rvgpu
-	url = http://10.100.101.58/rvgpu/rvgpu-cmodel.git
