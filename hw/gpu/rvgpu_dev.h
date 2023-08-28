@@ -41,6 +41,11 @@ typedef struct RVGPUDevice {
     PCIDevice pci_dev;
     /*< public >*/
 
+    // Memory Region
+    MemoryRegion vram;
+    MemoryRegion reg;
+
+
     void *rvgpu_class;
 } RVGPUDevice;
 

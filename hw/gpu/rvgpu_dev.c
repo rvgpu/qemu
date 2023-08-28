@@ -4,8 +4,51 @@
  * References: https://github.com/luizinhosuraty/pciemu
  */
 
+#include "qemu/units.h"
+
 #include "rvgpu_cif.h"
 #include "rvgpu_dev.h"
+
+static uint64_t rvgpu_reg_read(void *opaque, hwaddr addr, unsigned size)
+{
+    printf("[rvgpu] read reg[%lx].%d\n", addr, size);
+
+    return 0;
+}
+
+static void rvgpu_reg_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
+{
+    printf("[rvgpu] write reg[%lx].%d : %lx\n", addr, size, val);
+}
+
+static uint64_t rvgpu_vram_read(void *opaque, hwaddr addr, unsigned size)
+{
+    printf("[rvgpu] read vram[%lx].%d\n", addr, size);
+
+    return 0;
+}
+
+static void rvgpu_vram_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
+{
+    printf("[rvgpu] write vram[%lx].%d : %lx\n", addr, size, val);
+}
+
+static const MemoryRegionOps rvgpu_reg_ops = {
+    .read = rvgpu_reg_read,
+    .write = rvgpu_reg_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+    .impl.min_access_size = 1,
+    .impl.max_access_size = 4,
+};
+
+static const MemoryRegionOps rvgpu_vram_ops = {
+    .read = rvgpu_vram_read,
+    .write = rvgpu_vram_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+    .impl.min_access_size = 1,
+    .impl.max_access_size = 8,
+};
+
 
 /* -----------------------------------------------------------------------------
  *  Internal functions
@@ -44,6 +87,14 @@ static void rvgpu_device_init(PCIDevice *pci_dev, Error **errp)
 {
     RVGPUDevice *dev = RVGPU_DEVICE(pci_dev);
     dev->rvgpu_class = rvgpu_create();
+
+    // Bar0: 256M accessed memory
+    // Bar2: 2M register memory
+    memory_region_init_io(&dev->reg, OBJECT(dev), &rvgpu_reg_ops, dev, "rvgpu.reg", 2 * MiB);
+    memory_region_init_io(&dev->vram, OBJECT(dev), &rvgpu_vram_ops, dev, "rvgpu.vram", 256 * MiB);
+    pci_register_bar(&dev->pci_dev, 0, PCI_BASE_ADDRESS_MEM_PREFETCH | PCI_BASE_ADDRESS_MEM_TYPE_64, &dev->vram);
+    pci_register_bar(&dev->pci_dev, 2, PCI_BASE_ADDRESS_MEM_PREFETCH | PCI_BASE_ADDRESS_MEM_TYPE_64, &dev->reg);
+
     // rvgpu_irq_init(dev, errp);
     // rvgpu_dma_init(dev, errp);
     // rvgpu_mmio_init(dev, errp);
@@ -108,7 +159,7 @@ static void rvgpu_class_init(ObjectClass *klass, void *class_data)
     pci_device_class->vendor_id = RVGPU_HW_VENDOR_ID;
     pci_device_class->device_id = RVGPU_HW_DEVICE_ID;
     pci_device_class->revision = RVGPU_HW_REVISION;
-    pci_device_class->class_id = PCI_CLASS_DISPLAY_VGA;
+    pci_device_class->class_id = PCI_CLASS_DISPLAY_3D;
 
     set_bit(DEVICE_CATEGORY_DISPLAY, device_class->categories);
     device_class->desc = RVGPU_DEVICE_DESC;
