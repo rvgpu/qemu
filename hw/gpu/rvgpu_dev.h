@@ -11,7 +11,7 @@
 #include "hw/pci/pci.h"
 #include "hw/pci/pci_device.h"
 
-#define TYPE_RVGPU_DEVICE "rvgpu-pci"
+#define TYPE_RVGPU_DEVICE "rvgpu"
 #define RVGPU_DEVICE_DESC "RVGPU PCIe Device"
 
 #define RVGPU_HW_VENDOR_ID 0x1b36
