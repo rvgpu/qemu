@@ -93,7 +93,7 @@ static void rvgpu_device_init(PCIDevice *pci_dev, Error **errp)
     memory_region_init_io(&dev->reg, OBJECT(dev), &rvgpu_reg_ops, dev, "rvgpu.reg", 2 * MiB);
     memory_region_init_io(&dev->vram, OBJECT(dev), &rvgpu_vram_ops, dev, "rvgpu.vram", 256 * MiB);
     pci_register_bar(&dev->pci_dev, 0, PCI_BASE_ADDRESS_MEM_PREFETCH | PCI_BASE_ADDRESS_MEM_TYPE_64, &dev->vram);
-    pci_register_bar(&dev->pci_dev, 2, PCI_BASE_ADDRESS_MEM_PREFETCH | PCI_BASE_ADDRESS_MEM_TYPE_64, &dev->reg);
+    pci_register_bar(&dev->pci_dev, 2, PCI_BASE_ADDRESS_MEM_PREFETCH | PCI_BASE_ADDRESS_MEM_TYPE_32, &dev->reg);
 
     // rvgpu_irq_init(dev, errp);
     // rvgpu_dma_init(dev, errp);
