@@ -9,41 +9,41 @@
 #include "rvgpu_cif.h"
 #include "rvgpu_dev.h"
 
-static uint64_t rvgpu_reg_read(void *opaque, hwaddr addr, unsigned size)
+static uint64_t rvgpu_pci_reg_read(void *opaque, hwaddr addr, unsigned size)
 {
-    printf("[rvgpu] read reg[%lx].%d\n", addr, size);
-
-    return 0;
+    RVGPUDevice *dev = (RVGPUDevice *)opaque;
+    return rvgpu_read_register(dev->rvgpu_class, addr, size);
 }
 
-static void rvgpu_reg_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
+static void rvgpu_pci_reg_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
 {
-    printf("[rvgpu] write reg[%lx].%d : %lx\n", addr, size, val);
+    RVGPUDevice *dev = (RVGPUDevice *)opaque;
+    rvgpu_write_register(dev->rvgpu_class, addr, val, size);
 }
 
-static uint64_t rvgpu_vram_read(void *opaque, hwaddr addr, unsigned size)
+static uint64_t rvgpu_pci_vram_read(void *opaque, hwaddr addr, unsigned size)
 {
-    printf("[rvgpu] read vram[%lx].%d\n", addr, size);
-
-    return 0;
+    RVGPUDevice *dev = (RVGPUDevice *)opaque;
+    return rvgpu_read_vram(dev->rvgpu_class, addr, size);
 }
 
-static void rvgpu_vram_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
+static void rvgpu_pci_vram_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
 {
-    printf("[rvgpu] write vram[%lx].%d : %lx\n", addr, size, val);
+    RVGPUDevice *dev = (RVGPUDevice *)opaque;
+    rvgpu_write_vram(dev->rvgpu_class, addr, val, size);
 }
 
 static const MemoryRegionOps rvgpu_reg_ops = {
-    .read = rvgpu_reg_read,
-    .write = rvgpu_reg_write,
+    .read = rvgpu_pci_reg_read,
+    .write = rvgpu_pci_reg_write,
     .endianness = DEVICE_NATIVE_ENDIAN,
     .impl.min_access_size = 1,
     .impl.max_access_size = 4,
 };
 
 static const MemoryRegionOps rvgpu_vram_ops = {
-    .read = rvgpu_vram_read,
-    .write = rvgpu_vram_write,
+    .read = rvgpu_pci_vram_read,
+    .write = rvgpu_pci_vram_write,
     .endianness = DEVICE_NATIVE_ENDIAN,
     .impl.min_access_size = 1,
     .impl.max_access_size = 8,
