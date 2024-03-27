@@ -9,37 +9,54 @@
 #include "rvgpu_cif.h"
 #include "rvgpu_dev.h"
 
-static uint64_t rvgpu_pci_reg_read(void *opaque, hwaddr addr, unsigned size)
+static uint64_t rvgpu_pci_doorbell_read(void *opaque, hwaddr addr, unsigned size)
 {
     RVGPUDevice *dev = (RVGPUDevice *)opaque;
-    return rvgpu_read_register(dev->rvgpu_class, addr, size);
+    return rvgpu_read_doorbell(dev->rvgpu_class, addr, size);
 }
 
-static void rvgpu_pci_reg_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
+static void rvgpu_pci_doorbell_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
 {
     RVGPUDevice *dev = (RVGPUDevice *)opaque;
-    rvgpu_write_register(dev->rvgpu_class, addr, val, size);
+    rvgpu_write_doorbell(dev->rvgpu_class, addr, val, size);
+}
+
+static uint64_t rvgpu_pci_mmio_read(void *opaque, hwaddr addr, unsigned size)
+{
+    RVGPUDevice *dev = (RVGPUDevice *)opaque;
+    return rvgpu_read_mmio(dev->rvgpu_class, addr, size);
+}
+
+static void rvgpu_pci_mmio_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
+{
+    RVGPUDevice *dev = (RVGPUDevice *)opaque;
+    rvgpu_write_mmio(dev->rvgpu_class, addr, val, size);
+}
+
+static uint64_t rvgpu_pci_io_read(void *opaque, hwaddr addr, unsigned size)
+{
+    printf("read region4 io: 0x%lx(%d)\n", addr, size);
+    return 0;
+}
+
+static void rvgpu_pci_io_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
+{
+    printf("write region4 io: 0x%lx(%d): 0x%lx\n", addr, size, val);
 }
 
 static uint64_t rvgpu_pci_vram_read(void *opaque, hwaddr addr, unsigned size)
 {
+    printf("read region1 vram: 0x%lx(%d)\n", addr, size);
     RVGPUDevice *dev = (RVGPUDevice *)opaque;
     return rvgpu_read_vram(dev->rvgpu_class, addr, size);
 }
 
 static void rvgpu_pci_vram_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
 {
+    printf("write region1 vram: 0x%lx(%d):%lx\n", addr, size, val);
     RVGPUDevice *dev = (RVGPUDevice *)opaque;
     rvgpu_write_vram(dev->rvgpu_class, addr, val, size);
 }
-
-static const MemoryRegionOps rvgpu_reg_ops = {
-    .read = rvgpu_pci_reg_read,
-    .write = rvgpu_pci_reg_write,
-    .endianness = DEVICE_NATIVE_ENDIAN,
-    .impl.min_access_size = 1,
-    .impl.max_access_size = 4,
-};
 
 static const MemoryRegionOps rvgpu_vram_ops = {
     .read = rvgpu_pci_vram_read,
@@ -49,6 +66,29 @@ static const MemoryRegionOps rvgpu_vram_ops = {
     .impl.max_access_size = 8,
 };
 
+static const MemoryRegionOps rvgpu_doorbell_ops = {
+    .read = rvgpu_pci_doorbell_read,
+    .write = rvgpu_pci_doorbell_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+    .impl.min_access_size = 1,
+    .impl.max_access_size = 4,
+};
+
+static const MemoryRegionOps rvgpu_mmio_ops = {
+    .read = rvgpu_pci_mmio_read,
+    .write = rvgpu_pci_mmio_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+    .impl.min_access_size = 1,
+    .impl.max_access_size = 4,
+};
+
+static const MemoryRegionOps rvgpu_io_ops = {
+    .read = rvgpu_pci_io_read,
+    .write = rvgpu_pci_io_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+    .impl.min_access_size = 1,
+    .impl.max_access_size = 4,
+};
 
 /* -----------------------------------------------------------------------------
  *  Internal functions
@@ -88,12 +128,18 @@ static void rvgpu_device_init(PCIDevice *pci_dev, Error **errp)
     RVGPUDevice *dev = RVGPU_DEVICE(pci_dev);
     dev->rvgpu_class = rvgpu_create();
 
-    // Bar0: 256M accessed memory
-    // Bar2: 2M register memory
-    memory_region_init_io(&dev->reg, OBJECT(dev), &rvgpu_reg_ops, dev, "rvgpu.reg", 2 * MiB);
-    memory_region_init_io(&dev->vram, OBJECT(dev), &rvgpu_vram_ops, dev, "rvgpu.vram", 1024 * MiB);
+    // Bar0: 32G accessed memory
+    // Bar2: 2M  accessed memory
+    // Bar4: I/O ports, 256B
+    // Bar5: 1M  accessed memory
+    memory_region_init_io(&dev->vram, OBJECT(dev), &rvgpu_vram_ops, dev, "rvgpu.vram", 32 * 1024 * MiB);
+    memory_region_init_io(&dev->doorbell, OBJECT(dev), &rvgpu_doorbell_ops, dev, "rvgpu.doorbell", 2 * MiB);
+    memory_region_init_io(&dev->mmio, OBJECT(dev), &rvgpu_mmio_ops, dev, "rvgpu.mmio", 1 * MiB);
+    memory_region_init_io(&dev->io,   OBJECT(dev), &rvgpu_io_ops,   dev, "rvgpu.io",   256);
     pci_register_bar(&dev->pci_dev, 0, PCI_BASE_ADDRESS_MEM_PREFETCH | PCI_BASE_ADDRESS_MEM_TYPE_64, &dev->vram);
-    pci_register_bar(&dev->pci_dev, 2, PCI_BASE_ADDRESS_MEM_PREFETCH | PCI_BASE_ADDRESS_MEM_TYPE_32, &dev->reg);
+    pci_register_bar(&dev->pci_dev, 2, PCI_BASE_ADDRESS_MEM_PREFETCH | PCI_BASE_ADDRESS_MEM_TYPE_64, &dev->doorbell);
+    pci_register_bar(&dev->pci_dev, 5, PCI_BASE_ADDRESS_MEM_TYPE_32, &dev->mmio);
+    pci_register_bar(&dev->pci_dev, 4, PCI_BASE_ADDRESS_SPACE_IO, &dev->io);
 
     // rvgpu_irq_init(dev, errp);
     // rvgpu_dma_init(dev, errp);

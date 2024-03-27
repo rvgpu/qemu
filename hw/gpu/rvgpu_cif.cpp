@@ -29,7 +29,7 @@ uint64_t rvgpu_read_vram(void *gpu, uint64_t addr, uint32_t size)
     return rdata;
 }
 
-void rvgpu_write_register(void *gpu, uint64_t addr, uint64_t data, uint32_t size)
+void rvgpu_write_mmio(void *gpu, uint64_t addr, uint64_t data, uint32_t size)
 {
     rvgsim *rgpu = static_cast<rvgsim *>(gpu);
 
@@ -38,10 +38,10 @@ void rvgpu_write_register(void *gpu, uint64_t addr, uint64_t data, uint32_t size
         return;
     }
 
-    rgpu->write_register(addr, uint32_t(data));
+    rgpu->write_mmio(addr, uint32_t(data));
 }
 
-uint64_t rvgpu_read_register(void *gpu, uint64_t addr, uint32_t size)
+uint64_t rvgpu_read_mmio(void *gpu, uint64_t addr, uint32_t size)
 {
     rvgsim *rgpu = static_cast<rvgsim *>(gpu);
     uint64_t rdata = 0;
@@ -51,7 +51,34 @@ uint64_t rvgpu_read_register(void *gpu, uint64_t addr, uint32_t size)
         return rdata;
     }
 
-    rdata = (uint64_t)rgpu->read_register(addr);
+    rdata = (uint64_t)rgpu->read_mmio(addr);
+
+    return rdata;
+}
+
+void rvgpu_write_doorbell(void *gpu, uint64_t addr, uint64_t data, uint32_t size)
+{
+    rvgsim *rgpu = static_cast<rvgsim *>(gpu);
+
+    if (size != 4) {
+        printf("register need r/w with size 4\n");
+        return;
+    }
+
+    rgpu->write_doorbell(addr, uint32_t(data));
+}
+
+uint64_t rvgpu_read_doorbell(void *gpu, uint64_t addr, uint32_t size)
+{
+    rvgsim *rgpu = static_cast<rvgsim *>(gpu);
+    uint64_t rdata = 0;
+
+    if (size != 4) {
+        printf("register need r/w with size 4\n");
+        return rdata;
+    }
+
+    rdata = (uint64_t)rgpu->read_doorbell(addr);
 
     return rdata;
 }

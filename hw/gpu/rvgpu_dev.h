@@ -14,9 +14,9 @@
 #define TYPE_RVGPU_DEVICE "rvgpu"
 #define RVGPU_DEVICE_DESC "RVGPU PCIe Device"
 
-#define RVGPU_HW_VENDOR_ID 0x8510
-#define RVGPU_HW_DEVICE_ID 0x0500
-#define RVGPU_HW_REVISION 0x01
+#define RVGPU_HW_VENDOR_ID 0x1002
+#define RVGPU_HW_DEVICE_ID 0x744c
+#define RVGPU_HW_REVISION 0xc8
 
 /*
  * Declare the object type for RVGPUDevice and all boilerplate code
@@ -43,8 +43,9 @@ typedef struct RVGPUDevice {
 
     // Memory Region
     MemoryRegion vram;
-    MemoryRegion reg;
-
+    MemoryRegion doorbell;
+    MemoryRegion mmio;
+    MemoryRegion io;
 
     void *rvgpu_class;
 } RVGPUDevice;
