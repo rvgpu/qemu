@@ -23,37 +23,44 @@ static void rvgpu_pci_doorbell_write(void *opaque, hwaddr addr, uint64_t val, un
 
 static uint64_t rvgpu_pci_mmio_read(void *opaque, hwaddr addr, unsigned size)
 {
+    uint64_t ret = 0;
     RVGPUDevice *dev = (RVGPUDevice *)opaque;
-    return rvgpu_read_mmio(dev->rvgpu_class, addr, size);
+    ret = rvgpu_read_mmio(dev->rvgpu_class, addr, size);
+    printf("read from mmio> 0x%lx(%d): 0x%lx\n", addr, size, ret);
+    return ret;
 }
 
 static void rvgpu_pci_mmio_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
 {
+    printf("write to mmio> 0x%lx(%d): 0x%lx\n", addr, size, val);
     RVGPUDevice *dev = (RVGPUDevice *)opaque;
     rvgpu_write_mmio(dev->rvgpu_class, addr, val, size);
 }
 
 static uint64_t rvgpu_pci_io_read(void *opaque, hwaddr addr, unsigned size)
 {
-    printf("read region4 io: 0x%lx(%d)\n", addr, size);
+    printf("read region4 io> 0x%lx(%d)\n", addr, size);
     return 0;
 }
 
 static void rvgpu_pci_io_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
 {
-    printf("write region4 io: 0x%lx(%d): 0x%lx\n", addr, size, val);
+    printf("write region4 io> 0x%lx(%d): 0x%lx\n", addr, size, val);
 }
 
 static uint64_t rvgpu_pci_vram_read(void *opaque, hwaddr addr, unsigned size)
 {
-    printf("read region1 vram: 0x%lx(%d)\n", addr, size);
+    uint64_t ret = 0;
     RVGPUDevice *dev = (RVGPUDevice *)opaque;
-    return rvgpu_read_vram(dev->rvgpu_class, addr, size);
+    ret = rvgpu_read_vram(dev->rvgpu_class, addr, size);
+    printf("read from vram> 0x%lx(%d): 0x%lx\n", addr, size, ret);
+
+    return ret;
 }
 
 static void rvgpu_pci_vram_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
 {
-    printf("write region1 vram: 0x%lx(%d):%lx\n", addr, size, val);
+    printf("write to vram> 0x%lx(%d): %lx\n", addr, size, val);
     RVGPUDevice *dev = (RVGPUDevice *)opaque;
     rvgpu_write_vram(dev->rvgpu_class, addr, val, size);
 }
